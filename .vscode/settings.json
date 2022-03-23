@@ -2,7 +2,8 @@
     "files.associations": {
         "*.tcc": "cpp",
         "unordered_map": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "stdexcept": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

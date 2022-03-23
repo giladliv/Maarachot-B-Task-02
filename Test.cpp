@@ -134,7 +134,7 @@ TEST_CASE("Good readings")
 
     //erasing nothing and on erased
     notebook.erase(42, 50, 0, Direction::Horizontal, 100);
-    notebook.erase(42, 48, 50, Direction::Vertical, 50)
+    notebook.erase(42, 48, 50, Direction::Vertical, 50);
     CHECK(notebook.read(42, 50, 3, Direction::Horizontal, 50) == string(50, '~'));
 
     //read whts writen horz
