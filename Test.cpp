@@ -18,96 +18,6 @@ using namespace ariel;
 #include <ctime>
 using namespace std;
 
-/**
- * Returns the input string without the whitespace characters: space, newline and tab.
- * Requires std=c++2a.
- */
-string gl_nospaces(string input) {
-	std::erase(input, ' ');
-	std::erase(input, '\t');
-	std::erase(input, '\n');
-	std::erase(input, '\r');
-	return input;
-}
-
-/**
- * @brief generates a random number between the range of [min, max]
- * 
- * @param min 
- * @param max 
- * @return int the random number
- */
-int rand_range(int min, int max)
-{
-    int range = max - min + 1;
-    return rand() % range + min;
-}
-
-TEST_CASE("Good input")
-{
-    
-	CHECK(1 == 1);
-}
-
-TEST_CASE("Good Known Structure")
-{
-    // string str_format = "\t\t\t\t\t\t\t\t\t\n"      // this is the sample of 7x9
-    //                     "\t\r\r\r\r\r\r\r\t\n"      // the letters are the ones who won't be good for the input
-    //                     "\t\r\t\t\t\t\t\r\t\n"      // that why i chose them
-    //                     "\t\r\t\r\r\r\t\r\t\n"
-    //                     "\t\r\t\t\t\t\t\r\t\n"
-    //                     "\t\r\r\r\r\r\r\r\t\n"
-    //                     "\t\t\t\t\t\t\t\t\t";       // i took the regular case and then i changed to the letters
-    
-    // string test;
-    
-    // // according to the ascii table
-    // // the range of every the good letters (printable) are from 33-126
-
-    // srand(time(nullptr));       // setting the random by clock
-    // char a = '\0', b = '\0';
-    
-
-    // for (int i = 0; i < 5; i++)
-    // {
-    //     a = rand_range(33, 126);        // generates a random char from the good range
-        
-    //     for (int j = 0; j < 5; j++)
-    //     {
-    //         b = rand_range(33, 126);    // generates a random char from the good range
-            
-    //         test = str_format;
-    //         replace(test.begin(), test.end(), '\t', a);     // replace the char '\t' with the good char a
-    //         replace(test.begin(), test.end(), '\r', b);     // replace the char '\t' with the good char b
-            
-    //         CHECK(gl_nospaces(mat(9, 7, a, b)) == gl_nospaces(test));
-    //     }
-
-    //     replace(test.begin(), test.end(), b, a);     // make that the letter will be the same    
-    //     CHECK(gl_nospaces(mat(9, 7, a, a)) == gl_nospaces(test));
-    // }
-
-}
-
-TEST_CASE("Bad numbers")
-{
-    Notebook notebook;
-	CHECK_THROWS(notebook.write(0, 0, 300, Direction::Horizontal, "dfd"));
-    // CHECK_THROWS(mat(1, 2, '@', '-'));          // right is even
-    // CHECK_THROWS(mat(4, 5, '&', '*'));          // left is even
-    // CHECK_THROWS(mat(122, 144, '=', '^'));      // both are even
-    
-    // CHECK_THROWS(mat(-1, 3, '@', '-'));         // right is negative
-    // CHECK_THROWS(mat(4, -5, '&', '*'));         // left is negative
-    // CHECK_THROWS(mat(-122, -144, '=', '^'));    // both are negative
-    // CHECK_THROWS(mat(-11, -13, '=', '^'));      // both are negative
-
-    // CHECK_THROWS(mat(0, 3, '+', '-'));          // right is 0
-    // CHECK_THROWS(mat(4, 0, '/', '*'));          // left is 0
-    // CHECK_THROWS(mat(0, 0, '#', '%'));          // both are 0
-    // CHECK_THROWS(mat(-2, 0, 'G', 'L'));         // both are 0
-}
-
 TEST_CASE("Bad pages")
 {
     Notebook notebook;
@@ -152,9 +62,110 @@ TEST_CASE("Bad length")
     CHECK_THROWS(notebook.erase(50, 50, 0, Direction::Horizontal, 151));
     CHECK_THROWS(notebook.read(30, 1, 0, Direction::Horizontal, 101));
 
-    // out of bounds 
+    // out of bounds - horizontal
     CHECK_THROWS(notebook.read(30, 1, 5, Direction::Horizontal, 100));
     CHECK_THROWS(notebook.erase(50, 50, 50, Direction::Horizontal, 51));
     CHECK_THROWS(notebook.write(10, 30, 0, Direction::Horizontal, string(101, 'a')));
     CHECK_THROWS(notebook.write(10, 30, 10, Direction::Horizontal, string(91, 'a')));
+}
+
+TEST_CASE("Bad writings")
+{
+    Notebook notebook;
+
+    CHECK_THROWS(notebook.write(10, 30, 0, Direction::Horizontal, "hello\tworld"));
+    CHECK_THROWS(notebook.write(10, 30, 0, Direction::Horizontal, "hello~~~~world"));
+    
+    string str = "mememe";
+    str[3] = 16;
+    CHECK_THROWS(notebook.write(10, 30, 0, Direction::Horizontal, str));
+
+
+    // write over the same thing - Horizontal
+    notebook.write(10, 30, 0, Direction::Horizontal, "hello world");
+    CHECK_THROWS(notebook.write(10, 30, 0, Direction::Horizontal, "hello world"));
+    
+    notebook.erase(10, 30, 0, Direction::Horizontal, 11);
+    CHECK_THROWS(notebook.write(10, 30, 0, Direction::Horizontal, "hello world"));
+
+    //// write over the same thing - Vertical
+    notebook.write(20, 30, 0, Direction::Vertical, "hello world");
+    CHECK_THROWS(notebook.write(20, 30, 0, Direction::Vertical, "hello world"));
+    
+    // tests when is writed horizontal that vriting on it vertically will throw exception
+    notebook.write(104, 50, 20, Direction::Horizontal, "alice in wonderland");
+    notebook.write(104, 53, 20, Direction::Horizontal, "we are all mad here alice");
+    CHECK_THROWS(notebook.write(105, 49, 23, Direction::Vertical, "abanibi"));
+
+    // tests when is writed vertical that vriting on it horizontically will throw exception
+    notebook.write(105, 20, 30, Direction::Vertical, "alice in wonderland");
+    notebook.write(105, 20, 31, Direction::Vertical, "we are all mad here alice");
+    CHECK_THROWS(notebook.write(105, 22, 27, Direction::Horizontal, "abanibi"));
+
+    // checking writing on erased spot 
+    notebook.write(106, 50, 20, Direction::Horizontal, "alice in wonderland");
+    notebook.write(106, 53, 20, Direction::Horizontal, "we are all mad here alice");
+    notebook.erase(106, 49, 23, Direction::Vertical, 50);
+    CHECK_THROWS(notebook.write(105, 49, 23, Direction::Vertical, "abanibi"));
+
+    // checking writing on erased spot 
+    notebook.write(206, 20, 30, Direction::Vertical, "alice in wonderland");
+    notebook.write(206, 20, 31, Direction::Vertical, "we are all mad here alice");
+    notebook.erase(206, 22, 28, Direction::Horizontal, 4);
+    CHECK_THROWS(notebook.write(105, 22, 27, Direction::Horizontal, "abanibi"));
+}
+
+TEST_CASE("Good readings")
+{
+    Notebook notebook;
+
+    // empty read
+    CHECK(notebook.read(42, 50, 3, Direction::Horizontal, 0) == "");
+    CHECK(notebook.read(42, 50, 3, Direction::Vertical, 0) == "");
+
+    //read at the end
+    CHECK(notebook.read(42, 50, 99, Direction::Horizontal, 1) == "_");
+
+    //reding nothing
+    CHECK(notebook.read(42, 50, 3, Direction::Horizontal, 50) == string(50, '_'));
+    CHECK(notebook.read(42, 50, 50, Direction::Vertical, 50) == string(50, '_'));
+    CHECK(notebook.read(42, 50, 4, Direction::Horizontal, 16) == string(16, '_'));
+    CHECK(notebook.read(42, 50, 3, Direction::Vertical, 16) == string(16, '_'));
+
+    //erasing nothing and on erased
+    notebook.erase(42, 50, 0, Direction::Horizontal, 100);
+    notebook.erase(42, 48, 50, Direction::Vertical, 50)
+    CHECK(notebook.read(42, 50, 3, Direction::Horizontal, 50) == string(50, '~'));
+
+    //read whts writen horz
+    notebook.write(206, 20, 30, Direction::Horizontal, "alice in wonderland");
+    CHECK(notebook.read(206, 20, 30, Direction::Horizontal, 19) == "alice in wonderland");
+
+    // read vert
+    notebook.write(206, 21, 31, Direction::Vertical, "We are all mad here alice");
+    CHECK(notebook.read(206, 21, 31, Direction::Vertical, 25) == "We are all mad here alice");
+    CHECK(notebook.read(206, 20, 31, Direction::Vertical, 26) == "aWe are all mad here alice");
+    
+    // read combination
+    CHECK(notebook.read(206, 18, 31, Direction::Vertical, 28) == "__aWe are all mad here alice");
+    CHECK(notebook.read(206, 18, 31, Direction::Vertical, 30) == "__aWe are all mad here alice__");
+
+    // read from distance
+    notebook.write(206, 20, 25, Direction::Vertical, "yaba daba du");
+    notebook.write(206, 20, 26, Direction::Vertical, "yaba daba du");
+    CHECK(notebook.read(206, 20, 25, Direction::Vertical, 10) == "yy___alice");
+
+    // erase and read
+    notebook.erase(206, 20, 31, Direction::Horizontal, 17);
+    CHECK(notebook.read(206, 21, 31, Direction::Vertical, 25) == "a~~~~~~~~~~~~~~~~~d");
+    
+    // erase and read both
+    notebook.erase(206, 20, 30, Direction::Horizontal, 1);
+    CHECK(notebook.read(206, 21, 31, Direction::Vertical, 25) == "~~~~~~~~~~~~~~~~~~d");
+    
+    CHECK(notebook.read(206, 18, 31, Direction::Vertical, 28) == "__~We are all mad here alice");
+    CHECK(notebook.read(206, 18, 31, Direction::Vertical, 30) == "__~We are all mad here alice__");
+
+    notebook.erase(206, 20, 25, Direction::Vertical, 12);
+    CHECK(notebook.read(206, 21, 31, Direction::Vertical, 25) == string(12, '~'));
 }
